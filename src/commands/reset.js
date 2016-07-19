@@ -1,5 +1,6 @@
 import readHostFile from '../read-host-file';
 import writeHostFile from '../write-host-file';
+import lineMatchesHost from '../line-matches-host';
 
 export default {
   command: 'reset <host>',
@@ -8,11 +9,9 @@ export default {
     let updated = false;
     readHostFile().then(lines => {
       const newLines = lines.map(line => {
-        if (line.type === 'entry' && line.hosts.some(h => h.toLowerCase() === host.toLowerCase())) {
-          if (line.isActive) {
-            updated = true;
-            return { ...line, isActive: false };
-          }
+        if (lineMatchesHost(line, host) && line.isActive) {
+          updated = true;
+          return { ...line, isActive: false };
         }
 
         return line;

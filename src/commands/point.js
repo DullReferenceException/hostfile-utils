@@ -1,5 +1,6 @@
 import readHostFile from '../read-host-file';
 import writeHostFile from '../write-host-file';
+import lineMatchesHost from '../line-matches-host';
 
 export default {
   command: 'point <host> to <address>',
@@ -9,7 +10,7 @@ export default {
       let foundMatch = false;
       let insertionPoint = 0;
       const newLines = lines.map((line, i) => {
-        if (line.type === 'entry' && line.hosts.some(h => h.toLowerCase() === host.toLowerCase())) {
+        if (lineMatchesHost(line, host)) {
           insertionPoint = i + 1;
           if (line.address === address) {
             foundMatch = true;
