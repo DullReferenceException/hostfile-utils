@@ -1,0 +1,28 @@
+{
+  "name": "hostfile-utils",
+  "description": "Utilities to easily query and update your hosts file",
+  "license": "ISC",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/DullReferenceException/hostfile-utils.git"
+  },
+  "dependencies": {
+    "bluebird": "^3.4.1",
+    "yargs": "^4.8.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.10.1",
+    "babel-preset-es2015": "^6.9.0",
+    "babel-preset-stage-2": "^6.11.0",
+    "rimraf": "^2.5.3"
+  },
+  "bin": {
+    "hostfile": "./bin/hostfile.js"
+  },
+  "scripts": {
+    "clean": "rimraf ./lib",
+    "build": "npm run clean && babel --copy-files --out-dir ./lib ./src",
+    "build-watch": "babel --watch --copy-files --out-dir ./lib ./src"
+  }
+}
