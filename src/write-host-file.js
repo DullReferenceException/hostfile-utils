@@ -39,7 +39,10 @@ export default function writeHostFile(lines) {
       }
       if (line.updated) {
         console.log(output);
+      } else if (line.deleted) {
+        return void console.log(`deleted: ${output}`);
       }
+
       return Promise.fromCallback(cb => stream.write(output + EOL, cb));
     });
   }, Promise.resolve()).then(() => {
