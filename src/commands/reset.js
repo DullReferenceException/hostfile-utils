@@ -11,7 +11,7 @@ export default {
       const newLines = lines.map(line => {
         if (lineMatchesHost(line, host) && line.isActive) {
           updated = true;
-          return { ...line, isActive: false };
+          return { ...line, isActive: false, updated: true };
         }
 
         return line;

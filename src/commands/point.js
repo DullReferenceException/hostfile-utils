@@ -8,19 +8,19 @@ export default {
   handler({ host, address }) {
     readHostFile().then(lines => {
       let foundMatch = false;
-      let insertionPoint = 0;
+      let insertionPoint = lines.length;
       const newLines = lines.map((line, i) => {
         if (lineMatchesHost(line, host)) {
           insertionPoint = i + 1;
           if (line.address === address) {
             foundMatch = true;
             if (line.isActive) {
-              console.log(`${host} is already pointing to ${address}`);
+              console.log(`${line.hosts} is already pointing to ${address}`);
             } else {
-              return { ...line, isActive: true };
+              return { ...line, isActive: true, updated: true };
             }
           } else if (line.isActive) {
-            return { ...line, isActive: false };
+            return { ...line, isActive: false, updated: true };
           }
         }
 
@@ -28,12 +28,17 @@ export default {
       });
 
       if (!foundMatch) {
-        newLines.splice(insertionPoint, 0, {
-          type: 'entry',
-          isActive: true,
-          address,
-          hosts: [host]
-        });
+        if (host.indexOf('*') >= 0) {
+          console.log('No matching hosts found.');
+        } else {
+          newLines.splice(insertionPoint, 0, {
+            type: 'entry',
+            isActive: true,
+            address,
+            hosts: [host],
+            updated: true
+          });
+        }
       }
 
       return writeHostFile(newLines);

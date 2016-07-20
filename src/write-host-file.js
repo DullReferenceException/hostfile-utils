@@ -37,6 +37,9 @@ export default function writeHostFile(lines) {
               : `#${address} ${host} ${comment}`;
           break;
       }
+      if (line.updated) {
+        console.log(output);
+      }
       return Promise.fromCallback(cb => stream.write(output + EOL, cb));
     });
   }, Promise.resolve()).then(() => {
