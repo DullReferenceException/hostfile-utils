@@ -5,6 +5,7 @@ import writeHostFile from '../write-host-file';
 import lineMatchesHost from '../line-matches-host';
 import backupHosts from '../backup-hosts';
 import { addressRegex } from '../patterns';
+import wildcardToRegex from '../wildcard-to-regex';
 
 export default {
   command: 'point <host> to <address>',
@@ -12,29 +13,15 @@ export default {
   handler({ host, address: destName }) {
 
     let dest = null;
-
-    const resolveDest = addressRegex.test(destName)
-      ? Promise.resolve({ address: destName })
-      : Promise.fromCallback(cb => {
-          return resolve(destName, cb)
-        }).then(addresses => {
-          const validAddress = addresses.find(addr => addressRegex.test(addr));
-          if (!validAddress) {
-            throw new Error(`Could not resolve ${destName}.`);
-          }
-
-          return {
-            name: destName,
-            address: validAddress
-          };
-        });
+    let lines = null;
 
     return (
-      resolveDest
-    ).then(resolved => {
+      readHostFile()
+    ).then(contents => {
+      lines = contents;
+      return resolveDest(destName, host, lines);
+    }).then(resolved => {
       dest = resolved;
-      return readHostFile();
-    }).then(lines => {
       let updated = false;
       let foundMatch = false;
       let insertionPoint = lines.length;
@@ -80,3 +67,41 @@ export default {
     });
   }
 };
+
+function resolveDest(destName, host, lines) {
+  if (addressRegex.test(destName)) {
+    return Promise.resolve({ address: destName });
+  }
+
+  if (destName.indexOf('*') >= 0) {
+    const regex = wildcardToRegex(destName);
+    const matches = lines.filter(line => {
+      return (
+        lineMatchesHost(line, host)
+        && (line.addressAliases || []).some(alias => regex.test(alias))
+      );
+    });
+    if (!matches.length) {
+      throw new Error(`Could not resolve ${destName}`);
+    } else if (matches.length > 1) {
+      const matchDesc = matches.map(m => `${m.address} (${m.addressAliases})`);
+      throw new Error(`Ambiguous pattern ${destName} matches ${matchDesc}`);
+    } else {
+      return { address: matches[0].address };
+    }
+  }
+
+  return (
+    resolve(destName, cb)
+  ).then(addresses => {
+    const validAddress = addresses.find(address => addressRegex.test(address));
+    if (!validAddress) {
+      throw new Error(`Could not resolve ${destName}.`);
+    }
+
+    return {
+      name: destName,
+      address: validAddress
+    };
+  });
+}

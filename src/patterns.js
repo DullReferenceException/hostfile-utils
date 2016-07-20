@@ -5,12 +5,14 @@ const address = `${ipv4}|${ipv6}`;
 const host = '[a-z0-9\\-]+(?:\\.[a-z0-9\\-]+)*';
 
 const comment = '#.*';
+const hostSep = ',|\\s|#';
 
 const hostEntry = `^\\s*(${address})((?:\\s+${host})+)\\s*(${comment})?$`;
 const commentedHostEntry = hostEntry.replace('^', '^\\s*#\\s*');
 
 export const addressRegex = new RegExp(`^${address}$`, 'i');
 export const hostRegex = new RegExp(`^${host}$`, 'i');
+export const inlineHostRegex = new RegExp(`(?:^|${hostSep})(${host})(?:${hostSep}|$)`, 'ig');
 
 export const blankLineRegex = /^\s*$/;
 export const hostEntryRegex = new RegExp(hostEntry, 'i');

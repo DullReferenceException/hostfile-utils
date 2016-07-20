@@ -1,7 +1,13 @@
 import { readFile } from 'fs';
 import Promise from 'bluebird';
 import hostFilePath from './host-file-path';
-import { hostEntryRegex, commentedHostRegex, commentLineRegex, blankLineRegex } from './patterns';
+import {
+  hostEntryRegex,
+  commentedHostRegex,
+  commentLineRegex,
+  blankLineRegex,
+  inlineHostRegex
+} from './patterns';
 
 const readFileAsync = Promise.promisify(readFile);
 
@@ -21,7 +27,8 @@ export default function() {
           isActive: true,
           address: hostEntry[1],
           hosts: splitHosts(hostEntry[2]),
-          comment: hostEntry[3]
+          comment: hostEntry[3],
+          addressAliases: parseAddressAliases(hostEntry[3])
         }
       }
 
@@ -32,7 +39,8 @@ export default function() {
           isActive: false,
           address: commentedEntry[1],
           hosts: splitHosts(commentedEntry[2]),
-          comment: commentedEntry[3]
+          comment: commentedEntry[3],
+          addressAliases: parseAddressAliases(commentedEntry[3])
         }
       }
 
@@ -56,4 +64,13 @@ export default function() {
       }
     });
   });
+}
+
+function parseAddressAliases(comment) {
+  const result = [];
+  let match;
+  while (match = inlineHostRegex.exec(comment)) {
+    result.push(match[1]);
+  }
+  return result;
 }
