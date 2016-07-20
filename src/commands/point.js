@@ -69,8 +69,12 @@ export default {
 };
 
 function resolveDest(destName, host, lines) {
+  if (/^local(host)?$/i.test(destName)) {
+    return { address: '127.0.0.1' };
+  }
+
   if (addressRegex.test(destName)) {
-    return Promise.resolve({ address: destName });
+    return { address: destName };
   }
 
   if (destName.indexOf('*') >= 0) {
@@ -92,7 +96,7 @@ function resolveDest(destName, host, lines) {
   }
 
   return (
-    resolve(destName, cb)
+    Promise.fromCallback(cb => resolve(destName, cb))
   ).then(addresses => {
     const validAddress = addresses.find(address => addressRegex.test(address));
     if (!validAddress) {
