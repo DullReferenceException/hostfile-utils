@@ -9,26 +9,30 @@ import { addressRegex } from '../patterns';
 export default {
   command: 'point <host> to <address>',
   describe: 'Assigns an address to the given hostname',
-  handler({ host, address }) {
+  handler({ host, address: destName }) {
 
-    let destHostName = null;
-    const resolveDest = addressRegex.test(address)
-      ? Promise.resolve()
+    let dest = null;
+
+    const resolveDest = addressRegex.test(destName)
+      ? Promise.resolve({ address: destName })
       : Promise.fromCallback(cb => {
-          return resolve(address, cb)
+          return resolve(destName, cb)
         }).then(addresses => {
           const validAddress = addresses.find(addr => addressRegex.test(addr));
           if (!validAddress) {
-            throw new Error(`Could not resolve ${address}.`);
+            throw new Error(`Could not resolve ${destName}.`);
           }
 
-          destHostName = address;
-          address = validAddress;
+          return {
+            name: destName,
+            address: validAddress
+          };
         });
 
     return (
       resolveDest
-    ).then(() => {
+    ).then(resolved => {
+      dest = resolved;
       return readHostFile();
     }).then(lines => {
       let updated = false;
@@ -37,10 +41,10 @@ export default {
       const newLines = lines.map((line, i) => {
         if (lineMatchesHost(line, host)) {
           insertionPoint = i + 1;
-          if (line.address === address) {
+          if (line.address === dest.address) {
             foundMatch = true;
             if (line.isActive) {
-              console.log(`${line.hosts} is already pointing to ${address}`);
+              console.log(`${line.hosts} is already pointing to ${dest.address}`);
             } else {
               updated = true;
               return { ...line, isActive: true, updated: true };
@@ -62,9 +66,9 @@ export default {
           newLines.splice(insertionPoint, 0, {
             type: 'entry',
             isActive: true,
-            address,
+            address: dest.address,
             hosts: [host],
-            comment: destHostName && `# ${destHostName}`,
+            comment: dest.name && `# ${dest.name}`,
             updated: true
           });
         }
