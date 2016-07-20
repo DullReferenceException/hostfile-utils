@@ -1,6 +1,7 @@
 import readHostFile from '../read-host-file';
 import writeHostFile from '../write-host-file';
 import lineMatchesHost from '../line-matches-host';
+import backupHosts from '../backup-hosts';
 
 export default {
   command: 'reset <host>',
@@ -21,7 +22,7 @@ export default {
         return void console.log(`No active address assignments for ${host} to reset.`);
       }
 
-      return writeHostFile(newLines);
+      return backupHosts().then(() => writeHostFile(newLines));
     });
   }
 };
